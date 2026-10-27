@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Detetive de Golpes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#E8F2FF;--card:#fff;--ink:#14213D;--soft:#51607A;--line:#C9D8EE;--coral:#F05D5E;--sun:#FFB800;--mint:#1FA971;--blue:#2F6FDE;--hl:#FFD6D6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1A2F;--card:#172640;--ink:#F1F5FF;--soft:#A8B6D0;--line:#2B3D5E;--hl:#6B2C34}}
+:root[data-theme="dark"]{--bg:#0E1A2F;--card:#172640;--ink:#F1F5FF;--soft:#A8B6D0;--line:#2B3D5E;--hl:#6B2C34}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;font-size:18px;line-height:1.45}
+main{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:clamp(2rem,8vw,3rem);line-height:1;margin:8px 0 6px;font-weight:800}
+h2{font-size:1.2rem;margin:0 0 8px}
+p{margin:0 0 10px}
+.lead{color:var(--soft)}
+.card{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:18px;margin-bottom:16px}
+button{font:inherit;font-weight:700;border:0;border-radius:14px;padding:12px 18px;background:var(--blue);color:#fff;cursor:pointer}
+button.good{background:var(--mint)}button.bad{background:var(--coral)}
+button:focus-visible,.cl:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.bar{display:flex;justify-content:space-between;color:var(--soft);font-weight:700;margin-bottom:8px}
+.phone{background:var(--bg);border:2px solid var(--line);border-radius:18px;padding:12px}
+.app{font-size:.9rem;color:var(--soft);font-weight:700}
+.from{font-weight:800;margin:2px 0 6px}
+.msg{background:var(--card);border:2px solid var(--line);border-radius:6px 18px 18px 18px;padding:10px 14px;font-size:1.15rem}
+.cl{cursor:pointer;border-radius:6px;padding:0 2px;text-decoration:underline dotted var(--soft);text-underline-offset:4px}
+.cl:hover{background:rgba(255,184,0,.35)}
+.cl.found{background:var(--hl);text-decoration:none}
+.hint{color:var(--soft);font-size:.95rem;margin:10px 0 0}
+.clues{margin:10px 0 0;padding:0;list-style:none}
+.clues li{background:var(--hl);border-radius:10px;padding:6px 10px;margin-bottom:6px}
+.btns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.btns button{flex:1}
+.res{font-size:1.4rem;font-weight:800;margin:14px 0 4px}
+.badge{font-size:3rem;margin:0;line-height:1}
+footer{text-align:center;color:var(--soft);font-size:.9rem}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:no-preference){.shake{animation:sh .3s}@keyframes sh{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}}
+</style>
+</head>
+<body>
+<main>
+<h1>Detetive de Golpes</h1>
+<div id="intro" class="card">
+<p class="lead">Chegaram 7 mensagens. Algumas são golpe, outras são de verdade.</p>
+<p>Toque nas partes que parecem suspeitas para achar as pistas. Depois dê o seu veredito!</p>
+<button type="button" id="start">Começar</button>
+</div>
+
+<div id="game" class="card" hidden>
+<div class="bar"><span id="count"></span><span id="score"></span></div>
+<div class="phone">
+<div class="app" id="app"></div>
+<div class="from" id="from"></div>
+<div class="msg" id="msg"></div>
+</div>
+<p class="hint" id="hint">Toque nas partes suspeitas para marcar pistas.</p>
+<ul class="clues" id="clues" aria-live="polite"></ul>
+<div class="btns" id="verdict"><button type="button" class="bad" data-v="1">É golpe!</button><button type="button" class="good" data-v="0">É seguro</button></div>
+<div id="after" hidden><p class="res" id="res"></p><p id="why"></p><button type="button" id="next">Próxima</button></div>
+</div>
+
+<div id="end" class="card" hidden>
+<p class="badge" id="medal"></p>
+<h2 id="title"></h2>
+<p id="sum"></p>
+<p><strong>Na dúvida: pare, saia da conversa e conte para um adulto de confiança.</strong></p>
+<button type="button" id="again">Jogar de novo</button>
+</div>
+<footer>Todas as mensagens são inventadas.<br>Projeto de extensão: Navegando com Segurança</footer>
+</main>
+<script>
+const Q=[
+{app:'Mensagem no jogo',from:'Premio_Oficial',scam:1,p:[['Parabéns! Você ganhou '],['1000 moedas GRÁTIS','Prêmio bom demais para ser verdade.'],['. Clique agora: '],['moedas-gratis.xyz/pegar','Link estranho, que não é do site oficial do jogo.'],[' '],['Só hoje!','Pressa: o golpista não quer que você pense.']],safe:''},
+{app:'Mensagem da família',from:'Mãe',scam:0,p:[['Filho, saí do trabalho. Chego às 18h. A janta está no forno.']],safe:'É uma conversa normal de alguém que você conhece. Não pede nada nem manda link.'},
+{app:'Chat do jogo',from:'Gabi_Pro99',scam:1,p:[['Posso subir seu nível rapidinho! '],['Só me passa sua senha','Senha é segredo. Nem amigo de jogo pode pedir.'],[' '],['e não conta pra ninguém','Pedir segredo é sinal de alerta.']],safe:''},
+{app:'SMS',from:'Banco Seguro',scam:1,p:[['Seu celular será '],['bloqueado em 1 hora!','Ameaça com pressa para você agir sem pensar.'],[' Confirme seus dados em: '],['banc0-seguro.com','O "o" foi trocado por zero. É um site falso imitando o verdadeiro.']],safe:''},
+{app:'Grupo da turma',from:'Prof. Ana',scam:0,p:[['Pessoal, lembrete: amanhã é a feira de ciências. Tragam o cartaz!']],safe:'É um aviso comum no grupo da turma, sem link estranho e sem pedir dados.'},
+{app:'Pedido de amizade',from:'Lucas_2011',scam:1,p:[['Oi! Sou novo aqui. '],['Qual é a sua escola e onde você mora?','Quem você não conhece não precisa saber onde você estuda ou mora.'],[' '],['Não conta pros seus pais, é segredo nosso.','Pedir segredo dos adultos é um grande sinal de alerta.']],safe:''},
+{app:'Mensagem no celular',from:'Contato novo',scam:1,p:[['Oi, mandei um código no seu celular por engano. '],['Pode me passar o número?','Código de verificação é como senha. Golpistas usam para roubar contas.']],safe:''}
+];
+const $=id=>document.getElementById(id);
+let i=0,pts=0,done=false,found=0;
+function show(id){['intro','game','end'].forEach(x=>$(x).hidden=x!==id)}
+function load(){
+ const q=Q[i];done=false;found=0;
+ $('count').textContent='Mensagem '+(i+1)+' de '+Q.length;$('score').textContent='Acertos: '+pts;
+ $('app').textContent=q.app;$('from').textContent=q.from;
+ $('msg').innerHTML='';$('clues').innerHTML='';$('after').hidden=true;$('verdict').hidden=false;$('hint').hidden=false;
+ q.p.forEach(([t,w])=>{
+  const s=document.createElement('span');s.textContent=t;
+  {s.className='cl';s.tabIndex=0;
+   const tap=()=>{if(done)return;
+    if(w){if(!s.classList.contains('found')){s.classList.add('found');found++;const li=document.createElement('li');li.textContent='Pista: '+w;$('clues').appendChild(li)}}
+    else{$('hint').textContent='Essa parte parece normal. Continue procurando!';$('msg').classList.remove('shake');void $('msg').offsetWidth;$('msg').classList.add('shake')}};
+   s.onclick=tap;s.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tap()}}}
+  $('msg').appendChild(s);
+ });
+}
+document.querySelectorAll('#verdict button').forEach(b=>b.onclick=()=>{
+ if(done)return;done=true;const q=Q[i],ok=(+b.dataset.v)===q.scam;if(ok)pts++;
+ $('score').textContent='Acertos: '+pts;
+ $('res').textContent=ok?'Acertou!':'Quase!';
+ $('res').style.color=ok?'var(--mint)':'var(--coral)';
+ if(q.scam){
+  q.p.forEach((x,k)=>{const s=$('msg').children[k];if(x[1]&&!s.classList.contains('found')){s.classList.add('found');const li=document.createElement('li');li.textContent='Pista: '+x[1];$('clues').appendChild(li)}});
+  $('why').textContent=ok?'Era golpe mesmo. Veja as pistas marcadas acima.':'Era golpe. Veja as pistas que passaram batido.';
+ }else $('why').textContent=(ok?'Isso mesmo, é seguro. ':'Era seguro. ')+q.safe;
+ $('verdict').hidden=true;$('hint').hidden=true;$('after').hidden=false;
+ $('next').textContent=i===Q.length-1?'Ver resultado':'Próxima';
+});
+$('next').onclick=()=>{if(i<Q.length-1){i++;load()}else end()};
+function end(){
+ const m=pts>=6?['🏆','Detetive Mestre']:pts>=4?['🔍','Detetive Esperto']:['🕵️','Detetive Júnior'];
+ $('medal').textContent=m[0];$('title').textContent=m[1];
+ $('sum').textContent='Você acertou '+pts+' de '+Q.length+' mensagens.';show('end');
+}
+$('start').onclick=()=>{i=0;pts=0;show('game');load()};
+$('again').onclick=()=>{i=0;pts=0;show('game');load()};
+</script>
+</body>
+</html>
